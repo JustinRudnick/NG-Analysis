@@ -86,7 +86,7 @@ func AnalyseProtos(sampleC int,
 		}
 		getNearestSample := func(prototype *mat.VecDense, samples []*mat.VecDense) *mat.VecDense {
 			samplesCopy := make([]*mat.VecDense, len(samples))
-			for i, sample := range samplesCopy {
+			for i, sample := range samples {
 				d := mat.NewVecDense(sample.Len(), nil)
 				d.SubVec(sample, prototype)
 				samplesCopy[i] = d
