@@ -59,9 +59,12 @@ func AnalyseProtos(sampleC int,
 		switch sampleFileType {
 		case input.PLY:
 			sampleSet, err = input.PlyToSampleSet(sampleSetFilePaths[i])
+			minmaxScaler := input.Fit(sampleSet, 0, 1)
+			sampleSet = minmaxScaler.Transform(sampleSet)
 		case input.CSV_NO_HEADER:
 			sampleSet, err = input.CSVNoHeaderToSampleSet(sampleSetFilePaths[i], CsvDimension, logger)
-			sampleSet = input.NormalizeVecDense(sampleSet)
+			minmaxScaler := input.Fit(sampleSet, 0, 1)
+			sampleSet = minmaxScaler.Transform(sampleSet)
 		}
 		util.Panic(err, logger, fmt.Sprintf("could not read sample set from: %s", sampleSetFilePaths[i]))
 
@@ -83,9 +86,10 @@ func AnalyseProtos(sampleC int,
 		}
 		getNearestSample := func(prototype *mat.VecDense, samples []*mat.VecDense) *mat.VecDense {
 			samplesCopy := make([]*mat.VecDense, len(samples))
-			copy(samplesCopy, samples)
 			for i, sample := range samplesCopy {
-				samplesCopy[i].SubVec(sample, prototype)
+				d := mat.NewVecDense(sample.Len(), nil)
+				d.SubVec(sample, prototype)
+				samplesCopy[i] = d
 			}
 			return util.MinAny(isCloser, samplesCopy...)
 		}

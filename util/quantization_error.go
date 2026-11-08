@@ -12,6 +12,7 @@ import (
 func GetQuantizationE(prototype []float64, samples [][]float64, prototypes [][]float64, lambda float64) (res float64) {
 	sampleC := len(samples)
 	prototypeC := len(prototypes)
+
 	distSq := func(p1, p2 []float64) float64 {
 		return Sum[float64](p1, func(value float64, idx int) float64 { return math.Pow(p1[idx]-p2[idx], 2) })
 	}
@@ -29,7 +30,7 @@ func GetQuantizationE(prototype []float64, samples [][]float64, prototypes [][]f
 	}
 
 	lastpart := func(sampleI, prototypeI int, lambda float64) float64 {
-		return math.Exp(-float64(rank(samples[sampleI], prototypes[prototypeI]))/lambda) * distSq(samples[sampleI], prototypes[prototypeI])
+		return math.Exp(-float64(rank(samples[sampleI], prototype))/lambda) * distSq(samples[sampleI], prototypes[prototypeI])
 	}
 
 	_C := func(lambda float64, prototypeCount int) float64 {
