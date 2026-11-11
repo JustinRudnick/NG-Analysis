@@ -9,7 +9,7 @@ import (
 // ("Neural-Gas" Network for Vector Quantization and its Application to Time-Series Prediction)
 //
 // Note that there are more samples, than prototypes
-func GetQuantizationE(prototype []float64, samples [][]float64, prototypes [][]float64, lambda float64) (res float64) {
+func GetQuantizationEMartinetz(prototype []float64, samples [][]float64, prototypes [][]float64, lambda float64) (res float64) {
 	sampleC := len(samples)
 	prototypeC := len(prototypes)
 
@@ -51,6 +51,32 @@ func GetQuantizationE(prototype []float64, samples [][]float64, prototypes [][]f
 	}
 
 	return factor * sum
+}
+
+/*
+For M samples and N prototypes and let d denote the euclidian distance between two points.
+Then this function calculates the quantization error as follows:
+
+1/M * sum_1^M(min_1^N(d(sample, prototype)))
+*/
+func GetQuantizationE(prototype []float64, samples [][]float64, prototypes [][]float64, lambda float64) (res float64) {
+	factor := float64(1) / float64(len(samples))
+
+	minDistance := func(sample []float64) float64 {
+		bestFittingPrototype := MinAny(
+			func(proto, currMin []float64) bool {
+				return EucDist(sample, proto) < EucDist(sample, currMin)
+			}, prototypes...)
+		return EucDist(bestFittingPrototype, sample)
+	}
+
+	quantizationErrorAbs := SumAny(samples, func(value []float64, idx int) float64 {
+		minD := minDistance(value)
+		return minD * minD
+	})
+
+	return factor * quantizationErrorAbs
+
 }
 
 // mean quantization error

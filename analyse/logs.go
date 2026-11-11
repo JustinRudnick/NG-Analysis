@@ -48,7 +48,11 @@ func AnalyseLogs(files []*os.File, results *os.File, logger *slog.Logger) {
 	util.Panic(err, logger, "could not compute time mean")
 
 	timeStdD, err := util.GetStdDeviation(times, times, len(times))
-	util.Panic(err, logger, "could not compute std deviation")
+	if len(files) <= 1 {
+		util.LogWarn(logger, "Too few files for stdandard deviation. Is set to 0.")
+	} else {
+		util.Panic(err, logger, "could not compute std deviation")
+	}
 
 	timeMax, err := util.Max(times...)
 	util.Panic(err, logger, "could not compute max time")
@@ -67,13 +71,33 @@ func AnalyseLogs(files []*os.File, results *os.File, logger *slog.Logger) {
 
 	util.LogInfo(logger, "Write final results to file.")
 
-	results.WriteString(fmt.Sprintf("time Max:\t\t%.17f\n", timeMax))
-	results.WriteString(fmt.Sprintf("time Mean:\t\t%.17f\n", timeMean))
-	results.WriteString(fmt.Sprintf("time stdD:\t\t%.17f\n", timeStdD))
+	timeMaxSplit := timeSplit(timeMax)
+	timeMeanSplit := timeSplit(timeMean)
+	timeStdDSplit := timeSplit(timeStdD)
 
-	results.WriteString(fmt.Sprintf("RAM (Go) Mean:\t\t%.17f\n", ramGoMean))
-	results.WriteString(fmt.Sprintf("RAM (Go) Max:\t\t%.17f\n", ramGoMax))
+	results.WriteString(fmt.Sprintf("time Max:\t\t%.17f\t(%d h %d min %d s)\n", timeMax, timeMaxSplit[0], timeMaxSplit[1], timeMaxSplit[2]))
+	results.WriteString(fmt.Sprintf("time Mean:\t\t%.17f\t(%d h %d min %d s)\n", timeMean, timeMeanSplit[0], timeMeanSplit[1], timeMeanSplit[2]))
+	results.WriteString(fmt.Sprintf("time stdD:\t\t%.17f\t(%d h %d min %d s)\n", timeStdD, timeStdDSplit[0], timeStdDSplit[1], timeStdDSplit[2]))
 
-	results.WriteString(fmt.Sprintf("RAM (Linux) Mean:\t%.17f\n", ramLinuxMean))
-	results.WriteString(fmt.Sprintf("RAM (Linux) Max:\t%.17f\n", ramLinuxMax))
+	results.WriteString(fmt.Sprintf("RAM (Go) Mean:\t\t%.17f MB\n", ramGoMean))
+	results.WriteString(fmt.Sprintf("RAM (Go) Max:\t\t%.17f MB\n", ramGoMax))
+
+	results.WriteString(fmt.Sprintf("RAM (Linux) Mean:\t%.17f MB\n", ramLinuxMean))
+	results.WriteString(fmt.Sprintf("RAM (Linux) Max:\t%.17f MB\n", ramLinuxMax))
+}
+
+// returns the passed extractet as {hrs, mins, secs} s.t. hrs*3600 + mins*60 + secs = floor(seconds)
+func timeSplit(seconds float64) []int {
+	hrs := int(seconds / 3600)
+	seconds -= float64(hrs * 3600)
+	mins := int(seconds / 60)
+	seconds -= float64(mins * 60)
+	secs := int(seconds)
+
+	time := make([]int, 3)
+	time[0] = hrs
+	time[1] = mins
+	time[2] = secs
+
+	return time
 }

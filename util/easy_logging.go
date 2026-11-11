@@ -12,6 +12,11 @@ func LogError(logger *slog.Logger, msg string) {
 	IfLogged(logger, func() { logger.Error(msg) })
 }
 
+// logs an error iff logger is not nil
+func LogWarn(logger *slog.Logger, msg string) {
+	IfLogged(logger, func() { logger.Warn(msg) })
+}
+
 // executes fnc iff logger is not nil
 func IfLogged(logger *slog.Logger, fnc func()) {
 	if logger != nil {

@@ -1,7 +1,9 @@
 package input
 
 import (
+	"errors"
 	"math"
+	"nganalysis/util"
 	"sort"
 
 	"gonum.org/v1/gonum/mat"
@@ -23,7 +25,11 @@ func quantile(sorted []float64, q float64) float64 {
 
 // Fit learns per-feature bounds. loQ=0, hiQ=1 gives plain min-max;
 // e.g. 0.01 and 0.99 gives the outlier-robust variant.
-func Fit(X []*mat.VecDense, loQ, hiQ float64) *MinMaxScaler {
+func Fit(X []*mat.VecDense, loQ, hiQ float64) (scaler *MinMaxScaler) {
+	if len(X) == 0 {
+		util.Panic(errors.New("Data set contains no elements."), nil, "")
+		return nil
+	}
 	d := X[0].Len()
 	lo, hi := mat.NewVecDense(d, nil), mat.NewVecDense(d, nil)
 	col := make([]float64, len(X))
